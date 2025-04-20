@@ -19,11 +19,11 @@ async create(createUserDto: CreateUserDto) {
     return await this.userRepository.save(user);
   }
 
-  async findOne(username: string): Promise<User> {
-    const user =  await this.userRepository.findOne({ where: { username } });
+  async findOne(username: string): Promise<User | null> {
+    const user = await this.userRepository.findOne({ where: { username } });
 
-    if (!user) {
-      throw new Error('User not found');
+    if(!user) {
+      return null
     }
     return user
   }

@@ -1,19 +1,40 @@
-// src/auth/auth.controller.ts
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+/* eslint-disable */
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-
-class SignInDto {
-  username: string;
-  password: string;
-}
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { AuthGuard } from './guard/auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
+  @Post('register')
+  register(
+    @Body()
+    registerDto: RegisterDto,
+  ) {
+    return this.authService.register(registerDto);
+  }
+
   @Post('login')
-  signIn(@Body() signInDto: SignInDto) {
-    return this.authService.signIn(signInDto.username, signInDto.password);
+  login(
+    @Body()
+    loginDto: LoginDto,
+  ) {
+    return this.authService.login(loginDto);
+  }
+
+  @Get('profile')
+  @UseGuards(AuthGuard)
+  profile(@Request() req) {
+    return req.user;
   }
 }
