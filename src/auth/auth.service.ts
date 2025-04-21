@@ -5,6 +5,7 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from 'src/common/enums/rol.enum';
 
 
 
@@ -16,20 +17,26 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const user = await this.usersService.findOne(registerDto.username);
+    const user = await this.usersService.findByUsernameWithPassword(registerDto.username);
     if (user) {
       throw new BadRequestException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10)
-    return this.usersService.create({
+    const newUser = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
+      role: Role.ADMIN // asignar el rol por defecto al crear un nuevo usuario
     });
+    
+    // excluir el password del objeto que se devuelve
+    const { password, ...result } = newUser
+
+    return result;
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findOne(loginDto.username)
+    const user = await this.usersService.findByUsernameWithPassword(loginDto.username)
     if(!user) {
       throw new UnauthorizedException('Invalid credentials')
     }
@@ -45,5 +52,9 @@ export class AuthService {
       token,
       role: user.role
     };
+  }
+
+  async profile({username, role} : {username: string, role: string}) {
+    return await this.usersService.findOne(username)
   }
 }

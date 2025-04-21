@@ -6,6 +6,7 @@ export class LoginDto {
   @Transform(({ value }) => value.trim()) // limpia espacios en blanco
   username: string;
 
+  
   @IsString()
   @MinLength(6)
   @Transform(({ value }) => value.trim()) // limpia espacios en blanco

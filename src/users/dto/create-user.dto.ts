@@ -1,4 +1,5 @@
 import { IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
+import { Role } from "src/common/enums/rol.enum";
 
 export class CreateUserDto {
 
@@ -15,5 +16,5 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(4)
-  role?: string
+  role?: Role;
 }
