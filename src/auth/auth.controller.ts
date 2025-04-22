@@ -14,6 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guard/auth.guard';
 import { Auth } from './decorators/auth.decorator';
 import { Role } from 'src/common/enums/rol.enum';
+import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -37,7 +38,8 @@ export class AuthController {
 
   @Get('profile')
   @Auth(Role.USER) // solo los usuarios con rol USER pueden acceder a este endpoint
-  profile(@Request() req) {
-    return req.user;
+  profile(@ActiveUser() user) {
+    console.log(user)
+    return this.authService.profile(user);
   }
 }

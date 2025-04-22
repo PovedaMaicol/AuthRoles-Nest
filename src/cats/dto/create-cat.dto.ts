@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { IsEmpty, IsInt, IsOptional, IsPositive, IsString, MinLength, IsNotEmpty } from 'class-validator';
 
 export class CreateCatDto {
 
@@ -13,4 +13,8 @@ export class CreateCatDto {
   @IsString()
   @IsOptional()
   breed?: string;
+
+  // @IsString()
+  // @IsNotEmpty()
+  // userName: string; // Nombre de usuario del creador del gato, se puede omitir si no se quiere asignar un creador al gato
 }

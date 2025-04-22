@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
@@ -12,6 +13,7 @@ import { Repository } from 'typeorm';
 import { QueryFailedError } from 'typeorm';
 
 import { Breed } from 'src/breeds/entities/breed.entity';
+import { Role } from 'src/common/enums/rol.enum';
 
 @Injectable()
 export class CatsService {
@@ -23,38 +25,41 @@ export class CatsService {
     private readonly breedRepository: Repository<Breed>,
   ) {}
 
-  async create(createCatDto: CreateCatDto) {
-    const breed = await this.breedRepository.findOneBy({
-      name: createCatDto.breed,
-    });
-
-    if (!breed) {
-      throw new NotFoundException(
-        `Breed with name ${createCatDto.breed} not found`,
-      );
-    }
+  async create(createCatDto: CreateCatDto, user) {
+  if (!createCatDto.breed) {
+    throw new NotFoundException('Breed is required');
+  }
+  const breed = await this.validateBreed(createCatDto.breed);
 
     return await this.catRepository.save({
       ...createCatDto,
-      breed,
+      breed: breed,
+      userName: user.username, // Asignar el nombre de usuario del creador
     });
   }
 
-  async findAll() {
-    return await this.catRepository.find();
+  async findAll(user) {
+    return await this.catRepository.find({
+      where: { userName: user.username }, // Filtrar por el nombre de usuario del creador
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, user) {
     try {
       const cat = await this.catRepository.findOne({ where: { id } });
 
       if (!cat) {
         throw new NotFoundException(`Cat with id ${id} not found`);
       }
+
+      this.validateOwnership(cat, user);
+
       return cat;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error; // Reenvía el error de "no encontrado" que ya creamos
+      } else if (error instanceof UnauthorizedException) {
+        throw error; // También reenvía el error de autorización
       } else if (error instanceof QueryFailedError) {
         // Error específico de la base de datos
         throw new InternalServerErrorException(
@@ -126,5 +131,27 @@ export class CatsService {
         throw new InternalServerErrorException('Error interno del servidor');
       }
     }
+  }
+
+  private validateOwnership(cat: Cat, user) {
+    if (user.role !== Role.ADMIN && cat.userName !== user.username) {
+      throw new UnauthorizedException(
+        'You do not have permission to access this cat',
+      );
+    }
+  }
+
+  private async validateBreed(breed: string) {
+    const breedEntity = await this.breedRepository.findOneBy({
+      name: breed,
+    });
+
+    if (!breedEntity) {
+      throw new NotFoundException(
+        `Breed not found`,
+      );
+    }
+
+    return breedEntity
   }
 }

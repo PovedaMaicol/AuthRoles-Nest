@@ -46,11 +46,12 @@ export class AuthService {
       throw new UnauthorizedException('Password is wrong')
     }
 
-    const payload = {role: user.role}; // aqui le digo que campos van a viajar en el token (role)
+    const payload = {username: user.username, role: user.role}; // aqui le digo que campos van a viajar en el token (role)
     const token = await this.jwtService.signAsync(payload)
     return {
       token,
-      role: user.role
+      user: user.username,
+      role: user.role // aqui le digo que campos van a viajar en el token (role)
     };
   }
 
